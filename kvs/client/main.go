@@ -113,10 +113,10 @@ func main() {
 	done := atomic.Bool{}
 	resultsCh := make(chan uint64)
 
-	host := hosts[0]
 	clientId := 0
 	go func(clientId int) {
 		workload := kvs.NewWorkload(*workload, *theta)
+		host := hosts[clientId%len(hosts)]
 		runClient(clientId, host, &done, workload, resultsCh)
 	}(clientId)
 

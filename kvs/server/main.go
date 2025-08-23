@@ -10,6 +10,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/hashicorp/golang-lru/v2"
 	"github.com/rstutsman/cs6450-labs/kvs"
 )
 
@@ -28,6 +29,7 @@ func (s *Stats) Sub(prev *Stats) Stats {
 type KVService struct {
 	sync.Mutex
 	mp        map[string]string
+	cache     *lru.Cache[string, string]
 	stats     Stats
 	prevStats Stats
 	lastPrint time.Time
@@ -36,6 +38,7 @@ type KVService struct {
 func NewKVService() *KVService {
 	kvs := &KVService{}
 	kvs.mp = make(map[string]string)
+	kvs.cache, _ = lru.New[string, string](128)
 	kvs.lastPrint = time.Now()
 	return kvs
 }
@@ -46,8 +49,11 @@ func (kv *KVService) Get(request *kvs.GetRequest, response *kvs.GetResponse) err
 
 	kv.stats.gets++
 
-	if value, found := kv.mp[request.Key]; found {
+	// Check cache first
+	if value, found := kv.cache.Get(request.Key); found {
 		response.Value = value
+	} else {
+		response.Value, _ = kv.mp[request.Key]
 	}
 
 	return nil
