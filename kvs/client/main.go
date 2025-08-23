@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/rpc"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -50,25 +51,21 @@ func (client *Client) Put(key string, value string) {
 	}
 }
 
-func runClient(id int, addr string, done *atomic.Bool, workload *kvs.Workload, resultsCh chan<- uint64) {
+func runClient(id int, addr string, done *atomic.Bool, workload *kvs.Workload, resultsCh chan<- uint64, wg *sync.WaitGroup) {
+	defer wg.Done()
 	client := Dial(addr)
-
 	value := strings.Repeat("x", 128)
-	const batchSize = 1024
-
 	opsCompleted := uint64(0)
 
 	for !done.Load() {
-		for j := 0; j < batchSize; j++ {
-			op := workload.Next()
-			key := fmt.Sprintf("%d", op.Key)
-			if op.IsRead {
-				client.Get(key)
-			} else {
-				client.Put(key, value)
-			}
-			opsCompleted++
+		op := workload.Next()
+		key := fmt.Sprintf("%d", op.Key)
+		if op.IsRead {
+			client.Get(key)
+		} else {
+			client.Put(key, value)
 		}
+		opsCompleted++
 	}
 
 	fmt.Printf("Client %d finished operations.\n", id)
@@ -94,6 +91,7 @@ func main() {
 	theta := flag.Float64("theta", 0.99, "Zipfian distribution skew parameter")
 	workload := flag.String("workload", "YCSB-B", "Workload type (YCSB-A, YCSB-B, YCSB-C)")
 	secs := flag.Int("secs", 30, "Duration in seconds for each client to run")
+	numClients := flag.Int("clients", 32, "Concurrent clients")
 	flag.Parse()
 
 	if len(hosts) == 0 {
@@ -111,19 +109,28 @@ func main() {
 	start := time.Now()
 
 	done := atomic.Bool{}
-	resultsCh := make(chan uint64)
+	resultsCh := make(chan uint64, *numClients)
+	var wg sync.WaitGroup
 
-	clientId := 0
-	go func(clientId int) {
-		workload := kvs.NewWorkload(*workload, *theta)
-		host := hosts[clientId%len(hosts)]
-		runClient(clientId, host, &done, workload, resultsCh)
-	}(clientId)
+	for i := 0; i < *numClients; i++ {
+		wg.Add(1)
+		go func(clientId int) {
+			workload := kvs.NewWorkload(*workload, *theta)
+			host := hosts[clientId%len(hosts)]
+			runClient(clientId, host, &done, workload, resultsCh, &wg)
+		}(i)
+	}
 
 	time.Sleep(time.Duration(*secs) * time.Second)
 	done.Store(true)
 
-	opsCompleted := <-resultsCh
+	wg.Wait()
+	close(resultsCh)
+
+	var opsCompleted uint64 = 0
+	for ops := range resultsCh {
+		opsCompleted += ops
+	}
 
 	elapsed := time.Since(start)
 
