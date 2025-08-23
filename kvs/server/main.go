@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/rpc"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/hashicorp/golang-lru/v2"
@@ -44,18 +45,21 @@ func NewKVService() *KVService {
 }
 
 func (kv *KVService) Get(request *kvs.GetRequest, response *kvs.GetResponse) error {
-	kv.Lock()
-	defer kv.Unlock()
-
-	kv.stats.gets++
-
 	// Check cache first
 	if value, found := kv.cache.Get(request.Key); found {
 		response.Value = value
-	} else {
-		response.Value, _ = kv.mp[request.Key]
+		atomic.AddUint64(&kv.stats.gets, 1)
+		return nil
 	}
 
+	kv.Lock()
+	defer kv.Unlock()
+
+	if value, found := kv.mp[request.Key]; found {
+		response.Value = value
+		kv.cache.Add(request.Key, response.Value)
+	}
+	kv.stats.gets++
 	return nil
 }
 
