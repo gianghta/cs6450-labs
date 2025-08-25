@@ -70,6 +70,7 @@ func (kv *KVService) Put(request *kvs.PutRequest, response *kvs.PutResponse) err
 	kv.stats.puts++
 
 	kv.mp[request.Key] = request.Value
+	kv.cache.Remove(request.Key)
 
 	return nil
 }
