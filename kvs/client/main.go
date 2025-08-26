@@ -50,8 +50,12 @@ func (client *Client) Put(key string, value string) {
 	}
 }
 
-func runClient(id int, addr string, done *atomic.Bool, workload *kvs.Workload, resultsCh chan<- uint64) {
-	client := Dial(addr)
+func runClient(id int, hosts []string, done *atomic.Bool, workload *kvs.Workload, resultsCh chan<- uint64) {
+	len_hosts := len(hosts)
+	clients := make([]*Client, len_hosts)
+	for i, addr := range hosts {
+		clients[i] = Dial(addr)
+	}
 
 	value := strings.Repeat("x", 128)
 	const batchSize = 1024
@@ -63,9 +67,9 @@ func runClient(id int, addr string, done *atomic.Bool, workload *kvs.Workload, r
 			op := workload.Next()
 			key := fmt.Sprintf("%d", op.Key)
 			if op.IsRead {
-				client.Get(key)
+				clients[op.Key%uint64(len_hosts)].Get(key)
 			} else {
-				client.Put(key, value)
+				clients[op.Key%uint64(len_hosts)].Put(key, value)
 			}
 			opsCompleted++
 		}
@@ -94,6 +98,7 @@ func main() {
 	theta := flag.Float64("theta", 0.99, "Zipfian distribution skew parameter")
 	workload := flag.String("workload", "YCSB-B", "Workload type (YCSB-A, YCSB-B, YCSB-C)")
 	secs := flag.Int("secs", 30, "Duration in seconds for each client to run")
+	numClients := flag.Int("clients", 128, "Concurrent clients")
 	flag.Parse()
 
 	if len(hosts) == 0 {
@@ -111,19 +116,24 @@ func main() {
 	start := time.Now()
 
 	done := atomic.Bool{}
-	resultsCh := make(chan uint64)
+	resultsCh := make(chan uint64, *numClients)
 
-	host := hosts[0]
-	clientId := 0
-	go func(clientId int) {
-		workload := kvs.NewWorkload(*workload, *theta)
-		runClient(clientId, host, &done, workload, resultsCh)
-	}(clientId)
+	for clientId := 0; clientId < *numClients; clientId++ {
+		go func(clientId int) {
+			workload := kvs.NewWorkload(*workload, *theta)
+			runClient(clientId, hosts, &done, workload, resultsCh)
+		}(clientId)
+	}
 
 	time.Sleep(time.Duration(*secs) * time.Second)
 	done.Store(true)
 
-	opsCompleted := <-resultsCh
+	opsCompleted := uint64(0)
+	for clientId := 0; clientId < *numClients; clientId++ {
+		clientOps := <-resultsCh
+		fmt.Printf("Client %d completed %d operations.\n", clientId, clientOps)
+		opsCompleted += clientOps
+	}
 
 	elapsed := time.Since(start)
 
