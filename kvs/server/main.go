@@ -14,6 +14,7 @@ import (
 )
 
 type Stats struct {
+	sync.Mutex
 	puts uint64
 	gets uint64
 }
@@ -26,8 +27,7 @@ func (s *Stats) Sub(prev *Stats) Stats {
 }
 
 type KVService struct {
-	sync.Mutex
-	mp        map[string]string
+	mp        sync.Map
 	stats     Stats
 	prevStats Stats
 	lastPrint time.Time
@@ -35,31 +35,27 @@ type KVService struct {
 
 func NewKVService() *KVService {
 	kvs := &KVService{}
-	kvs.mp = make(map[string]string)
 	kvs.lastPrint = time.Now()
 	return kvs
 }
 
 func (kv *KVService) Get(request *kvs.GetRequest, response *kvs.GetResponse) error {
-	kv.Lock()
-	defer kv.Unlock()
-
+	kv.stats.Lock()
 	kv.stats.gets++
+	kv.stats.Unlock()
 
-	if value, found := kv.mp[request.Key]; found {
-		response.Value = value
+	value, ok := kv.mp.Load(request.Key)
+	if ok {
+		response.Value = value.(string)
 	}
-
 	return nil
 }
 
 func (kv *KVService) Put(request *kvs.PutRequest, response *kvs.PutResponse) error {
-	kv.Lock()
-	defer kv.Unlock()
-
+	kv.stats.Lock()
 	kv.stats.puts++
-
-	kv.mp[request.Key] = request.Value
+	kv.stats.Unlock()
+	kv.mp.Store(request.Key, request.Value)
 
 	return nil
 }
@@ -87,14 +83,14 @@ func (kv *KVService) BatchOp(request *kvs.BatchRequest, response *kvs.BatchRespo
 }
 
 func (kv *KVService) printStats() {
-	kv.Lock()
+	kv.stats.Lock()
 	stats := kv.stats
 	prevStats := kv.prevStats
 	kv.prevStats = stats
 	now := time.Now()
 	lastPrint := kv.lastPrint
 	kv.lastPrint = now
-	kv.Unlock()
+	kv.stats.Unlock()
 
 	diff := stats.Sub(&prevStats)
 	deltaS := now.Sub(lastPrint).Seconds()
