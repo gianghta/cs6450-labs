@@ -1,0 +1,138 @@
+hosts [node0:8080 node1:8080]
+theta 0.99
+workload YCSB-B
+secs 30
+clients 64
+batch size 65536
+connections per host 32
+fire and forget false
+GOMAXPROCS 16
+Client 32 finished with 327680 operations.
+Client 43 finished with 262144 operations.
+Client 41 finished with 327680 operations.
+Client 63 finished with 327680 operations.
+Client 0 completed 327680 operations.
+Client 1 completed 262144 operations.
+Client 2 completed 327680 operations.
+Client 58 finished with 327680 operations.
+Client 62 finished with 327680 operations.
+Client 38 finished with 327680 operations.
+Client 26 finished with 327680 operations.
+Client 17 finished with 262144 operations.
+Client 3 completed 327680 operations.
+Client 4 completed 327680 operations.
+Client 5 completed 327680 operations.
+Client 6 completed 327680 operations.
+Client 7 completed 327680 operations.
+Client 8 completed 262144 operations.
+Client 52 finished with 327680 operations.
+Client 8 finished with 327680 operations.
+Client 37 finished with 327680 operations.
+Client 50 finished with 327680 operations.
+Client 9 completed 327680 operations.
+Client 10 completed 327680 operations.
+Client 11 completed 327680 operations.
+Client 12 completed 327680 operations.
+Client 61 finished with 271789 operations.
+Client 20 finished with 327680 operations.
+Client 29 finished with 327680 operations.
+Client 24 finished with 262144 operations.
+Client 13 completed 271789 operations.
+Client 14 completed 327680 operations.
+Client 15 completed 327680 operations.
+Client 16 completed 262144 operations.
+Client 19 finished with 327680 operations.
+Client 9 finished with 327680 operations.
+Client 17 completed 327680 operations.
+Client 18 completed 327680 operations.
+Client 22 finished with 262144 operations.
+Client 19 completed 262144 operations.
+Client 25 finished with 327680 operations.
+Client 20 completed 327680 operations.
+Client 5 finished with 262144 operations.
+Client 33 finished with 262144 operations.
+Client 2 finished with 327680 operations.
+Client 56 finished with 327680 operations.
+Client 21 completed 262144 operations.
+Client 22 completed 262144 operations.
+Client 23 completed 327680 operations.
+Client 24 completed 327680 operations.
+Client 51 finished with 327680 operations.
+Client 25 completed 327680 operations.
+Client 13 finished with 327680 operations.
+Client 26 completed 327680 operations.
+Client 42 finished with 327680 operations.
+Client 30 finished with 262144 operations.
+Client 57 finished with 327680 operations.
+Client 35 finished with 327680 operations.
+Client 49 finished with 327680 operations.
+Client 7 finished with 262144 operations.
+Client 45 finished with 327680 operations.
+Client 21 finished with 262144 operations.
+Client 27 completed 327680 operations.
+Client 28 completed 262144 operations.
+Client 34 finished with 327680 operations.
+Client 59 finished with 327680 operations.
+Client 29 completed 327680 operations.
+Client 30 completed 327680 operations.
+Client 31 completed 327680 operations.
+Client 32 completed 262144 operations.
+Client 33 completed 327680 operations.
+Client 34 completed 262144 operations.
+Client 35 completed 327680 operations.
+Client 36 completed 327680 operations.
+Client 4 finished with 327680 operations.
+Client 37 completed 327680 operations.
+Client 3 finished with 327680 operations.
+Client 38 completed 327680 operations.
+Client 55 finished with 327680 operations.
+Client 39 completed 327680 operations.
+Client 27 finished with 262144 operations.
+Client 40 completed 262144 operations.
+Client 48 finished with 262144 operations.
+Client 41 completed 262144 operations.
+Client 12 finished with 327680 operations.
+Client 42 completed 327680 operations.
+Client 6 finished with 327680 operations.
+Client 43 completed 327680 operations.
+Client 18 finished with 327680 operations.
+Client 44 completed 327680 operations.
+Client 11 finished with 327680 operations.
+Client 36 finished with 327680 operations.
+Client 54 finished with 327680 operations.
+Client 44 finished with 327680 operations.
+Client 14 finished with 327680 operations.
+Client 16 finished with 327680 operations.
+Client 46 finished with 327680 operations.
+Client 0 finished with 327680 operations.
+Client 31 finished with 327680 operations.
+Client 40 finished with 327680 operations.
+Client 53 finished with 327680 operations.
+Client 39 finished with 327680 operations.
+Client 10 finished with 327680 operations.
+Client 60 finished with 327680 operations.
+Client 45 completed 327680 operations.
+Client 46 completed 327680 operations.
+Client 47 completed 327680 operations.
+Client 48 completed 327680 operations.
+Client 49 completed 327680 operations.
+Client 50 completed 327680 operations.
+Client 51 completed 327680 operations.
+Client 52 completed 327680 operations.
+Client 53 completed 327680 operations.
+Client 54 completed 327680 operations.
+Client 55 completed 327680 operations.
+Client 56 completed 327680 operations.
+Client 57 completed 327680 operations.
+Client 58 completed 327680 operations.
+Client 23 finished with 327680 operations.
+Client 28 finished with 327680 operations.
+Client 59 completed 327680 operations.
+Client 60 completed 327680 operations.
+Client 1 finished with 327680 operations.
+Client 61 completed 327680 operations.
+Client 47 finished with 327680 operations.
+Client 62 completed 327680 operations.
+Client 15 finished with 262144 operations.
+Client 63 completed 262144 operations.
+throughput 644003.63 ops/s

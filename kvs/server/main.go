@@ -8,10 +8,8 @@ import (
 	"net/http"
 	"net/rpc"
 	"sync"
-	"sync/atomic"
 	"time"
 
-	"github.com/hashicorp/golang-lru/v2"
 	"github.com/rstutsman/cs6450-labs/kvs"
 )
 
@@ -30,7 +28,6 @@ func (s *Stats) Sub(prev *Stats) Stats {
 type KVService struct {
 	sync.Mutex
 	mp        map[string]string
-	cache     *lru.Cache[string, string]
 	stats     Stats
 	prevStats Stats
 	lastPrint time.Time
@@ -39,27 +36,20 @@ type KVService struct {
 func NewKVService() *KVService {
 	kvs := &KVService{}
 	kvs.mp = make(map[string]string)
-	kvs.cache, _ = lru.New[string, string](128)
 	kvs.lastPrint = time.Now()
 	return kvs
 }
 
 func (kv *KVService) Get(request *kvs.GetRequest, response *kvs.GetResponse) error {
-	// Check cache first
-	if value, found := kv.cache.Get(request.Key); found {
-		response.Value = value
-		atomic.AddUint64(&kv.stats.gets, 1)
-		return nil
-	}
-
 	kv.Lock()
 	defer kv.Unlock()
 
+	kv.stats.gets++
+
 	if value, found := kv.mp[request.Key]; found {
 		response.Value = value
-		kv.cache.Add(request.Key, response.Value)
 	}
-	kv.stats.gets++
+
 	return nil
 }
 
@@ -70,7 +60,6 @@ func (kv *KVService) Put(request *kvs.PutRequest, response *kvs.PutResponse) err
 	kv.stats.puts++
 
 	kv.mp[request.Key] = request.Value
-	kv.cache.Remove(request.Key)
 
 	return nil
 }

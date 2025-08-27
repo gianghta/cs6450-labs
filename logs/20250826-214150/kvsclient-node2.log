@@ -1,0 +1,263 @@
+hosts [node0:8080]
+theta 0.99
+workload YCSB-B
+secs 30
+clients 128
+goroutines per client 4
+Client 108 finished operations.
+Client 0 completed 49152 operations.
+Client 27 finished operations.
+Client 1 completed 49152 operations.
+Client 85 finished operations.
+Client 2 completed 49152 operations.
+Client 49 finished operations.
+Client 3 completed 49152 operations.
+Client 102 finished operations.
+Client 4 completed 49152 operations.
+Client 36 finished operations.
+Client 5 completed 49152 operations.
+Client 23 finished operations.
+Client 6 completed 49152 operations.
+Client 11 finished operations.
+Client 7 completed 49152 operations.
+Client 72 finished operations.
+Client 8 completed 49152 operations.
+Client 83 finished operations.
+Client 9 completed 49152 operations.
+Client 12 finished operations.
+Client 10 completed 49152 operations.
+Client 101 finished operations.
+Client 11 completed 49152 operations.
+Client 100 finished operations.
+Client 12 completed 49152 operations.
+Client 105 finished operations.
+Client 13 completed 49152 operations.
+Client 103 finished operations.
+Client 14 completed 49152 operations.
+Client 42 finished operations.
+Client 15 completed 49152 operations.
+Client 114 finished operations.
+Client 16 completed 49152 operations.
+Client 120 finished operations.
+Client 17 completed 49152 operations.
+Client 64 finished operations.
+Client 18 completed 49152 operations.
+Client 96 finished operations.
+Client 19 completed 49152 operations.
+Client 59 finished operations.
+Client 20 completed 49152 operations.
+Client 124 finished operations.
+Client 21 completed 49152 operations.
+Client 38 finished operations.
+Client 22 completed 49152 operations.
+Client 73 finished operations.
+Client 23 completed 49152 operations.
+Client 31 finished operations.
+Client 24 completed 49152 operations.
+Client 15 finished operations.
+Client 25 completed 49152 operations.
+Client 126 finished operations.
+Client 26 completed 49152 operations.
+Client 4 finished operations.
+Client 27 completed 49152 operations.
+Client 104 finished operations.
+Client 28 completed 49152 operations.
+Client 10 finished operations.
+Client 29 completed 49152 operations.
+Client 21 finished operations.
+Client 30 completed 49152 operations.
+Client 50 finished operations.
+Client 31 completed 49152 operations.
+Client 40 finished operations.
+Client 32 completed 49152 operations.
+Client 1 finished operations.
+Client 33 completed 49152 operations.
+Client 121 finished operations.
+Client 34 completed 49152 operations.
+Client 19 finished operations.
+Client 35 completed 49152 operations.
+Client 25 finished operations.
+Client 36 completed 49152 operations.
+Client 26 finished operations.
+Client 37 completed 49152 operations.
+Client 113 finished operations.
+Client 38 completed 49152 operations.
+Client 53 finished operations.
+Client 39 completed 49152 operations.
+Client 20 finished operations.
+Client 40 completed 49152 operations.
+Client 89 finished operations.
+Client 41 completed 49152 operations.
+Client 39 finished operations.
+Client 42 completed 49152 operations.
+Client 115 finished operations.
+Client 43 completed 49152 operations.
+Client 125 finished operations.
+Client 44 completed 49152 operations.
+Client 74 finished operations.
+Client 45 completed 49152 operations.
+Client 24 finished operations.
+Client 46 completed 49152 operations.
+Client 0 finished operations.
+Client 47 completed 49152 operations.
+Client 52 finished operations.
+Client 48 completed 49152 operations.
+Client 17 finished operations.
+Client 49 completed 49152 operations.
+Client 3 finished operations.
+Client 50 completed 49152 operations.
+Client 107 finished operations.
+Client 51 completed 49152 operations.
+Client 92 finished operations.
+Client 52 completed 49152 operations.
+Client 111 finished operations.
+Client 53 completed 49152 operations.
+Client 33 finished operations.
+Client 54 completed 49152 operations.
+Client 93 finished operations.
+Client 55 completed 49152 operations.
+Client 29 finished operations.
+Client 56 completed 49152 operations.
+Client 68 finished operations.
+Client 57 completed 49152 operations.
+Client 77 finished operations.
+Client 58 completed 49152 operations.
+Client 54 finished operations.
+Client 59 completed 49152 operations.
+Client 65 finished operations.
+Client 60 completed 49152 operations.
+Client 60 finished operations.
+Client 61 completed 49152 operations.
+Client 35 finished operations.
+Client 62 completed 49152 operations.
+Client 14 finished operations.
+Client 63 completed 49152 operations.
+Client 62 finished operations.
+Client 64 completed 49152 operations.
+Client 95 finished operations.
+Client 65 completed 49152 operations.
+Client 75 finished operations.
+Client 66 completed 49152 operations.
+Client 112 finished operations.
+Client 67 completed 49152 operations.
+Client 41 finished operations.
+Client 68 completed 49152 operations.
+Client 43 finished operations.
+Client 69 completed 49152 operations.
+Client 78 finished operations.
+Client 70 completed 49152 operations.
+Client 16 finished operations.
+Client 71 completed 49152 operations.
+Client 55 finished operations.
+Client 72 completed 49152 operations.
+Client 127 finished operations.
+Client 73 completed 49152 operations.
+Client 88 finished operations.
+Client 74 completed 49152 operations.
+Client 94 finished operations.
+Client 75 completed 49152 operations.
+Client 91 finished operations.
+Client 76 completed 49152 operations.
+Client 46 finished operations.
+Client 77 completed 49152 operations.
+Client 13 finished operations.
+Client 78 completed 49152 operations.
+Client 61 finished operations.
+Client 79 completed 49152 operations.
+Client 71 finished operations.
+Client 80 completed 49152 operations.
+Client 2 finished operations.
+Client 81 completed 49152 operations.
+Client 118 finished operations.
+Client 82 completed 49152 operations.
+Client 82 finished operations.
+Client 83 completed 49152 operations.
+Client 110 finished operations.
+Client 84 completed 49152 operations.
+Client 116 finished operations.
+Client 85 completed 49152 operations.
+Client 48 finished operations.
+Client 86 completed 49152 operations.
+Client 7 finished operations.
+Client 87 completed 49152 operations.
+Client 80 finished operations.
+Client 88 completed 49152 operations.
+Client 117 finished operations.
+Client 89 completed 49152 operations.
+Client 79 finished operations.
+Client 90 completed 49152 operations.
+Client 84 finished operations.
+Client 91 completed 49152 operations.
+Client 99 finished operations.
+Client 92 completed 49152 operations.
+Client 18 finished operations.
+Client 93 completed 49152 operations.
+Client 97 finished operations.
+Client 94 completed 49152 operations.
+Client 57 finished operations.
+Client 95 completed 49152 operations.
+Client 106 finished operations.
+Client 96 completed 49152 operations.
+Client 9 finished operations.
+Client 97 completed 49152 operations.
+Client 22 finished operations.
+Client 98 completed 49152 operations.
+Client 70 finished operations.
+Client 99 completed 49152 operations.
+Client 63 finished operations.
+Client 100 completed 49152 operations.
+Client 28 finished operations.
+Client 101 completed 49152 operations.
+Client 76 finished operations.
+Client 102 completed 49152 operations.
+Client 47 finished operations.
+Client 103 completed 49152 operations.
+Client 81 finished operations.
+Client 104 completed 49152 operations.
+Client 67 finished operations.
+Client 105 completed 49152 operations.
+Client 86 finished operations.
+Client 106 completed 49152 operations.
+Client 109 finished operations.
+Client 107 completed 49152 operations.
+Client 90 finished operations.
+Client 108 completed 49152 operations.
+Client 123 finished operations.
+Client 109 completed 49152 operations.
+Client 119 finished operations.
+Client 110 completed 49152 operations.
+Client 69 finished operations.
+Client 111 completed 49152 operations.
+Client 34 finished operations.
+Client 112 completed 49152 operations.
+Client 32 finished operations.
+Client 113 completed 49152 operations.
+Client 98 finished operations.
+Client 114 completed 49152 operations.
+Client 87 finished operations.
+Client 115 completed 49152 operations.
+Client 51 finished operations.
+Client 116 completed 49152 operations.
+Client 6 finished operations.
+Client 117 completed 49152 operations.
+Client 37 finished operations.
+Client 118 completed 49152 operations.
+Client 44 finished operations.
+Client 119 completed 49152 operations.
+Client 30 finished operations.
+Client 120 completed 49152 operations.
+Client 8 finished operations.
+Client 121 completed 49152 operations.
+Client 122 finished operations.
+Client 122 completed 49152 operations.
+Client 45 finished operations.
+Client 123 completed 49152 operations.
+Client 5 finished operations.
+Client 124 completed 49152 operations.
+Client 56 finished operations.
+Client 125 completed 49152 operations.
+Client 58 finished operations.
+Client 126 completed 49152 operations.
+Client 66 finished operations.
+Client 127 completed 49152 operations.
+throughput 187390.34 ops/s
