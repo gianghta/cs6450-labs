@@ -20,16 +20,8 @@ type Stats struct {
 	gets uint64
 }
 
-func (s *Stats) Sub(prev *Stats) Stats {
-	r := Stats{}
-	r.puts = s.puts - prev.puts
-	r.gets = s.gets - prev.gets
-	return r
-}
-
 type KVService struct {
-	sync.Mutex
-	mp        map[string]string
+	mp        sync.Map
 	cache     *lru.Cache[string, string]
 	stats     Stats
 	prevStats Stats
@@ -38,60 +30,59 @@ type KVService struct {
 
 func NewKVService() *KVService {
 	kvs := &KVService{}
-	kvs.mp = make(map[string]string)
 	kvs.cache, _ = lru.New[string, string](128)
 	kvs.lastPrint = time.Now()
 	return kvs
 }
 
 func (kv *KVService) Get(request *kvs.GetRequest, response *kvs.GetResponse) error {
+	atomic.AddUint64(&kv.stats.gets, 1)
 	// Check cache first
 	if value, found := kv.cache.Get(request.Key); found {
 		response.Value = value
-		atomic.AddUint64(&kv.stats.gets, 1)
 		return nil
 	}
 
-	kv.Lock()
-	defer kv.Unlock()
-
-	if value, found := kv.mp[request.Key]; found {
-		response.Value = value
+	value, ok := kv.mp.Load(request.Key)
+	if ok {
+		response.Value = value.(string)
 		kv.cache.Add(request.Key, response.Value)
 	}
-	kv.stats.gets++
 	return nil
 }
 
 func (kv *KVService) Put(request *kvs.PutRequest, response *kvs.PutResponse) error {
-	kv.Lock()
-	defer kv.Unlock()
+	atomic.AddUint64(&kv.stats.puts, 1)
 
-	kv.stats.puts++
-
-	kv.mp[request.Key] = request.Value
+	kv.mp.Store(request.Key, request.Value)
 	kv.cache.Remove(request.Key)
 
 	return nil
 }
 
 func (kv *KVService) printStats() {
-	kv.Lock()
-	stats := kv.stats
-	prevStats := kv.prevStats
-	kv.prevStats = stats
-	now := time.Now()
-	lastPrint := kv.lastPrint
-	kv.lastPrint = now
-	kv.Unlock()
+	currentGets := atomic.LoadUint64(&kv.stats.gets)
+	currentPuts := atomic.LoadUint64(&kv.stats.puts)
 
-	diff := stats.Sub(&prevStats)
-	deltaS := now.Sub(lastPrint).Seconds()
+	now := time.Now()
+	deltaS := now.Sub(kv.lastPrint).Seconds()
+
+	diffGets := currentGets - kv.prevStats.gets
+	diffPuts := currentPuts - kv.prevStats.puts
+
+	kv.prevStats.gets = currentGets
+	kv.prevStats.puts = currentPuts
+	kv.lastPrint = now
+
+	getsPerSec := float64(diffGets) / deltaS
+	putsPerSec := float64(diffPuts) / deltaS
+	opsPerSec := getsPerSec + putsPerSec
 
 	fmt.Printf("get/s %0.2f\nput/s %0.2f\nops/s %0.2f\n\n",
-		float64(diff.gets)/deltaS,
-		float64(diff.puts)/deltaS,
-		float64(diff.gets+diff.puts)/deltaS)
+		getsPerSec,
+		putsPerSec,
+		opsPerSec,
+	)
 }
 
 func main() {
