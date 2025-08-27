@@ -58,20 +58,37 @@ func runClient(id int, hosts []string, done *atomic.Bool, workload *kvs.Workload
 	}
 
 	value := strings.Repeat("x", 128)
-	const batchSize = 1024
+	batchSize := 32 * len_hosts
 
 	opsCompleted := uint64(0)
+
+	batchRequestsPerHost := make([]kvs.BatchRequest, len_hosts)
+	sendBatchRequestsToHost := func(hostId int) {
+		request := batchRequestsPerHost[hostId]
+		response := kvs.BatchResponse{Responses: make([]kvs.Response, len(request.Requests))}
+		if err := clients[hostId].rpcClient.Call("KVService.BatchOp", &request, &response); err != nil {
+			log.Fatal(err)
+		}
+		opsCompleted += uint64(len(response.Responses))
+		batchRequestsPerHost[hostId].Requests = batchRequestsPerHost[hostId].Requests[:0]
+	}
 
 	for !done.Load() {
 		for j := 0; j < batchSize; j++ {
 			op := workload.Next()
 			key := fmt.Sprintf("%d", op.Key)
-			if op.IsRead {
-				clients[op.Key%uint64(len_hosts)].Get(key)
-			} else {
-				clients[op.Key%uint64(len_hosts)].Put(key, value)
+			request := kvs.Request{
+				IsRead: op.IsRead,
+				Key:    key,
 			}
-			opsCompleted++
+			if !op.IsRead {
+				request.Value = value
+			}
+			hostId := int(op.Key % uint64(len_hosts))
+			batchRequestsPerHost[hostId].Requests = append(batchRequestsPerHost[hostId].Requests, request)
+		}
+		for hostId := 0; hostId < len_hosts; hostId++ {
+			sendBatchRequestsToHost(hostId)
 		}
 	}
 
