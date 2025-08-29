@@ -50,8 +50,12 @@ func (client *Client) Put(key string, value string) {
 	}
 }
 
-func runClient(id int, addr string, done *atomic.Bool, workload *kvs.Workload, resultsCh chan<- uint64) {
-	client := Dial(addr)
+func runClient(id int, hosts []string, done *atomic.Bool, workload *kvs.Workload, resultsCh chan<- uint64) {
+	len_hosts := len(hosts)
+	clients := make([]*Client, len_hosts)
+	for i, addr := range hosts {
+		clients[i] = Dial(addr)
+	}
 
 	value := strings.Repeat("x", 128)
 	const batchSize = 1024
@@ -63,9 +67,9 @@ func runClient(id int, addr string, done *atomic.Bool, workload *kvs.Workload, r
 			op := workload.Next()
 			key := fmt.Sprintf("%d", op.Key)
 			if op.IsRead {
-				client.Get(key)
+				clients[op.Key%uint64(len_hosts)].Get(key)
 			} else {
-				client.Put(key, value)
+				clients[op.Key%uint64(len_hosts)].Put(key, value)
 			}
 			opsCompleted++
 		}
