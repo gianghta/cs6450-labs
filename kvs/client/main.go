@@ -62,16 +62,34 @@ func runClient(id int, hosts []string, done *atomic.Bool, workload *kvs.Workload
 
 	opsCompleted := uint64(0)
 
+	// Batch get requests for each host. When we see a put, we process the
+	// batch of gets for that host and then issue the put.
+	batchGetsForHost := make([]kvs.BatchGetRequest, len_hosts)
+	sendBatchGets := func(hostId int) {
+		request := batchGetsForHost[hostId]
+		response := kvs.BatchGetResponse{Responses: make([]kvs.GetResponse, len(request.Requests))}
+		if err := clients[hostId].rpcClient.Call("KVService.BatchGet", &request, &response); err != nil {
+			log.Fatal(err)
+		}
+		opsCompleted += uint64(len(response.Responses))
+		batchGetsForHost[hostId].Requests = batchGetsForHost[hostId].Requests[:0]
+	}
+
 	for !done.Load() {
 		for j := 0; j < batchSize; j++ {
 			op := workload.Next()
 			key := fmt.Sprintf("%d", op.Key)
+			hostId := int(op.Key % uint64(len_hosts))
 			if op.IsRead {
-				clients[op.Key%uint64(len_hosts)].Get(key)
+				request := kvs.GetRequest{Key: key}
+				batchGetsForHost[hostId].Requests = append(batchGetsForHost[hostId].Requests, request)
 			} else {
-				clients[op.Key%uint64(len_hosts)].Put(key, value)
+				sendBatchGets(hostId)
+				clients[hostId].Put(key, value)
 			}
-			opsCompleted++
+		}
+		for hostId := 0; hostId < len_hosts; hostId++ {
+			sendBatchGets(hostId)
 		}
 	}
 

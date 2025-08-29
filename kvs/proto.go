@@ -15,3 +15,11 @@ type GetRequest struct {
 type GetResponse struct {
 	Value string
 }
+
+type BatchGetRequest struct {
+	Requests []GetRequest
+}
+
+type BatchGetResponse struct {
+	Responses []GetResponse
+}

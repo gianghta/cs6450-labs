@@ -60,6 +60,16 @@ func (kv *KVService) Put(request *kvs.PutRequest, response *kvs.PutResponse) err
 	return nil
 }
 
+func (kv *KVService) BatchGet(request *kvs.BatchGetRequest, response *kvs.BatchGetResponse) error {
+	response.Responses = make([]kvs.GetResponse, len(request.Requests))
+	for i, request := range request.Requests {
+		if err := kv.Get(&request, &response.Responses[i]); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (kv *KVService) printStats() {
 	kv.stats.Lock()
 	stats := kv.stats
