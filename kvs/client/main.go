@@ -98,6 +98,7 @@ func main() {
 	theta := flag.Float64("theta", 0.99, "Zipfian distribution skew parameter")
 	workload := flag.String("workload", "YCSB-B", "Workload type (YCSB-A, YCSB-B, YCSB-C)")
 	secs := flag.Int("secs", 30, "Duration in seconds for each client to run")
+	numClients := flag.Int("clients", 256, "Concurrent clients")
 	flag.Parse()
 
 	if len(hosts) == 0 {
@@ -115,19 +116,24 @@ func main() {
 	start := time.Now()
 
 	done := atomic.Bool{}
-	resultsCh := make(chan uint64)
+	resultsCh := make(chan uint64, *numClients)
 
-	host := hosts[0]
-	clientId := 0
-	go func(clientId int) {
-		workload := kvs.NewWorkload(*workload, *theta)
-		runClient(clientId, host, &done, workload, resultsCh)
-	}(clientId)
+	for clientId := 0; clientId < *numClients; clientId++ {
+		go func(clientId int) {
+			workload := kvs.NewWorkload(*workload, *theta)
+			runClient(clientId, hosts, &done, workload, resultsCh)
+		}(clientId)
+	}
 
 	time.Sleep(time.Duration(*secs) * time.Second)
 	done.Store(true)
 
-	opsCompleted := <-resultsCh
+	opsCompleted := uint64(0)
+	for clientId := 0; clientId < *numClients; clientId++ {
+		clientOps := <-resultsCh
+		fmt.Printf("Client %d completed %d operations.\n", clientId, clientOps)
+		opsCompleted += clientOps
+	}
 
 	elapsed := time.Since(start)
 
