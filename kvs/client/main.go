@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/rpc"
 	"strings"
-	"sync"
 	"sync/atomic"
 	"time"
 
@@ -52,7 +51,7 @@ func (client *Client) Put(key string, value string) {
 }
 
 func runClient(id int, hosts []string, done *atomic.Bool, workload *kvs.Workload, resultsCh chan<- uint64) {
-    len_hosts := len(hosts)
+	len_hosts := len(hosts)
 	clients := make([]*Client, len_hosts)
 	for i, addr := range hosts {
 		clients[i] = Dial(addr)

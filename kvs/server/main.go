@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"net/rpc"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/rstutsman/cs6450-labs/kvs"
