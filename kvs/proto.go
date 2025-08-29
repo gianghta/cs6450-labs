@@ -16,20 +16,10 @@ type GetResponse struct {
 	Value string
 }
 
-type Request struct {
-	IsRead bool
-	Key    string
-	Value  string // only for writes
+type BatchGetRequest struct {
+	Requests []GetRequest
 }
 
-type BatchRequest struct {
-	Requests []Request
-}
-
-type Response struct {
-	Value string // only for reads
-}
-
-type BatchResponse struct {
-	Responses []Response
+type BatchGetResponse struct {
+	Responses []GetResponse
 }

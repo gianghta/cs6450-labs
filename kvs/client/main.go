@@ -62,33 +62,34 @@ func runClient(id int, hosts []string, done *atomic.Bool, workload *kvs.Workload
 
 	opsCompleted := uint64(0)
 
-	batchRequestsPerHost := make([]kvs.BatchRequest, len_hosts)
-	sendBatchRequestsToHost := func(hostId int) {
-		request := batchRequestsPerHost[hostId]
-		response := kvs.BatchResponse{Responses: make([]kvs.Response, len(request.Requests))}
-		if err := clients[hostId].rpcClient.Call("KVService.BatchOp", &request, &response); err != nil {
+	// Batch get requests for each host. When we see a put, we process the
+	// batch of gets for that host and then issue the put.
+	batchGetsForHost := make([]kvs.BatchGetRequest, len_hosts)
+	sendBatchGets := func(hostId int) {
+		request := batchGetsForHost[hostId]
+		response := kvs.BatchGetResponse{Responses: make([]kvs.GetResponse, len(request.Requests))}
+		if err := clients[hostId].rpcClient.Call("KVService.BatchGet", &request, &response); err != nil {
 			log.Fatal(err)
 		}
 		opsCompleted += uint64(len(response.Responses))
-		batchRequestsPerHost[hostId].Requests = batchRequestsPerHost[hostId].Requests[:0]
+		batchGetsForHost[hostId].Requests = batchGetsForHost[hostId].Requests[:0]
 	}
 
 	for !done.Load() {
 		for j := 0; j < batchSize; j++ {
 			op := workload.Next()
 			key := fmt.Sprintf("%d", op.Key)
-			request := kvs.Request{
-				IsRead: op.IsRead,
-				Key:    key,
-			}
-			if !op.IsRead {
-				request.Value = value
-			}
 			hostId := int(op.Key % uint64(len_hosts))
-			batchRequestsPerHost[hostId].Requests = append(batchRequestsPerHost[hostId].Requests, request)
+			if op.IsRead {
+				request := kvs.GetRequest{Key: key}
+				batchGetsForHost[hostId].Requests = append(batchGetsForHost[hostId].Requests, request)
+			} else {
+				sendBatchGets(hostId)
+				clients[hostId].Put(key, value)
+			}
 		}
 		for hostId := 0; hostId < len_hosts; hostId++ {
-			sendBatchRequestsToHost(hostId)
+			sendBatchGets(hostId)
 		}
 	}
 
@@ -115,7 +116,7 @@ func main() {
 	theta := flag.Float64("theta", 0.99, "Zipfian distribution skew parameter")
 	workload := flag.String("workload", "YCSB-B", "Workload type (YCSB-A, YCSB-B, YCSB-C)")
 	secs := flag.Int("secs", 30, "Duration in seconds for each client to run")
-	numClients := flag.Int("clients", 128, "Concurrent clients")
+	numClients := flag.Int("clients", 256, "Concurrent clients")
 	flag.Parse()
 
 	if len(hosts) == 0 {

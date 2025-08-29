@@ -60,23 +60,11 @@ func (kv *KVService) Put(request *kvs.PutRequest, response *kvs.PutResponse) err
 	return nil
 }
 
-func (kv *KVService) BatchOp(request *kvs.BatchRequest, response *kvs.BatchResponse) error {
-	response.Responses = make([]kvs.Response, len(request.Requests))
+func (kv *KVService) BatchGet(request *kvs.BatchGetRequest, response *kvs.BatchGetResponse) error {
+	response.Responses = make([]kvs.GetResponse, len(request.Requests))
 	for i, request := range request.Requests {
-		if request.IsRead {
-			getRequest := &kvs.GetRequest{Key: request.Key}
-			getResponse := &kvs.GetResponse{}
-			if err := kv.Get(getRequest, getResponse); err != nil {
-				return err
-			}
-			response.Responses[i] = kvs.Response{Value: getResponse.Value}
-		} else {
-			putRequest := &kvs.PutRequest{Key: request.Key, Value: request.Value}
-			putResponse := &kvs.PutResponse{}
-			if err := kv.Put(putRequest, putResponse); err != nil {
-				return err
-			}
-			response.Responses[i] = kvs.Response{}
+		if err := kv.Get(&request, &response.Responses[i]); err != nil {
+			return err
 		}
 	}
 	return nil
