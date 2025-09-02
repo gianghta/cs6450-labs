@@ -86,6 +86,7 @@ func runClient(id int, hosts []string, done *atomic.Bool, workload *kvs.Workload
 			} else {
 				sendBatchGets(hostId)
 				clients[hostId].Put(key, value)
+				opsCompleted++
 			}
 		}
 		for hostId := 0; hostId < len_hosts; hostId++ {
