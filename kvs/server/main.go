@@ -8,28 +8,26 @@ import (
 	"net/http"
 	"net/rpc"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/rstutsman/cs6450-labs/kvs"
 )
 
 type Stats struct {
-	sync.Mutex
-	puts uint64
-	gets uint64
+	puts atomic.Uint64
+	gets atomic.Uint64
 }
 
-func (s *Stats) Sub(prev *Stats) Stats {
-	r := Stats{}
-	r.puts = s.puts - prev.puts
-	r.gets = s.gets - prev.gets
-	return r
+type PrevStats struct {
+	puts uint64
+	gets uint64
 }
 
 type KVService struct {
 	mp        sync.Map
 	stats     Stats
-	prevStats Stats
+	prevStats PrevStats
 	lastPrint time.Time
 }
 
@@ -40,9 +38,7 @@ func NewKVService() *KVService {
 }
 
 func (kv *KVService) Get(request *kvs.GetRequest, response *kvs.GetResponse) error {
-	kv.stats.Lock()
-	kv.stats.gets++
-	kv.stats.Unlock()
+	kv.stats.gets.Add(1)
 
 	value, ok := kv.mp.Load(request.Key)
 	if ok {
@@ -52,41 +48,44 @@ func (kv *KVService) Get(request *kvs.GetRequest, response *kvs.GetResponse) err
 }
 
 func (kv *KVService) Put(request *kvs.PutRequest, response *kvs.PutResponse) error {
-	kv.stats.Lock()
-	kv.stats.puts++
-	kv.stats.Unlock()
+	kv.stats.puts.Add(1)
 	kv.mp.Store(request.Key, request.Value)
 
 	return nil
 }
 
 func (kv *KVService) BatchGet(request *kvs.BatchGetRequest, response *kvs.BatchGetResponse) error {
-	response.Responses = make([]kvs.GetResponse, len(request.Requests))
-	for i, request := range request.Requests {
-		if err := kv.Get(&request, &response.Responses[i]); err != nil {
-			return err
+	numGets := len(request.Requests)
+
+	response.Responses = make([]kvs.GetResponse, numGets)
+	for i, req := range request.Requests {
+		if value, ok := kv.mp.Load(req.Key); ok {
+			response.Responses[i].Value = value.(string)
 		}
 	}
+
+	kv.stats.gets.Add(uint64(numGets))
 	return nil
 }
 
 func (kv *KVService) printStats() {
-	kv.stats.Lock()
-	stats := kv.stats
-	prevStats := kv.prevStats
-	kv.prevStats = stats
+	currentGets := kv.stats.gets.Load()
+	currentPuts := kv.stats.puts.Load()
+
 	now := time.Now()
-	lastPrint := kv.lastPrint
+	deltaS := now.Sub(kv.lastPrint).Seconds()
+
+	diffGets := currentGets - kv.prevStats.gets
+	diffPuts := currentPuts - kv.prevStats.puts
+
+	kv.prevStats.gets = currentGets
+	kv.prevStats.puts = currentPuts
 	kv.lastPrint = now
-	kv.stats.Unlock()
 
-	diff := stats.Sub(&prevStats)
-	deltaS := now.Sub(lastPrint).Seconds()
-
-	fmt.Printf("get/s %0.2f\nput/s %0.2f\nops/s %0.2f\n\n",
-		float64(diff.gets)/deltaS,
-		float64(diff.puts)/deltaS,
-		float64(diff.gets+diff.puts)/deltaS)
+	fmt.Printf("get/s %.2f\nput/s %.2f\nops/s %.2f\n\n",
+		float64(diffGets)/deltaS,
+		float64(diffPuts)/deltaS,
+		float64(diffGets+diffPuts)/deltaS)
 }
 
 func main() {
