@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/rpc"
-	"os"
-	"path/filepath"
 	"strings"
 	"sync/atomic"
 	"time"
@@ -52,7 +50,7 @@ func (client *Client) Put(key string, value string) {
 	}
 }
 
-func runClient(id int, hosts []string, done *atomic.Bool, workload *kvs.Workload, resultsCh chan<- uint64, logger *kvs.HistoryLogger) {
+func runClient(id int, hosts []string, done *atomic.Bool, workload *kvs.Workload, resultsCh chan<- uint64) {
 	len_hosts := len(hosts)
 	clients := make([]*Client, len_hosts)
 	for i, addr := range hosts {
@@ -70,27 +68,9 @@ func runClient(id int, hosts []string, done *atomic.Bool, workload *kvs.Workload
 	sendBatchGets := func(hostId int) {
 		request := batchGetsForHost[hostId]
 		response := kvs.BatchGetResponse{Responses: make([]kvs.GetResponse, len(request.Requests))}
-
-		start := time.Now()
 		if err := clients[hostId].rpcClient.Call("KVService.BatchGet", &request, &response); err != nil {
 			log.Fatal(err)
 		}
-		end := time.Now()
-
-		if logger != nil { // Check if logging is enabled
-			for i, req := range request.Requests {
-				resp := response.Responses[i]
-				logger.Log(kvs.HistoryEntry{
-					ClientID:    id,
-					OpType:      "get",
-					Key:         req.Key,
-					OutputValue: resp.Value,
-					StartNanos:  start.UnixNano(),
-					EndNanos:    end.UnixNano(),
-				})
-			}
-		}
-
 		opsCompleted += uint64(len(response.Responses))
 		batchGetsForHost[hostId].Requests = batchGetsForHost[hostId].Requests[:0]
 	}
@@ -105,21 +85,7 @@ func runClient(id int, hosts []string, done *atomic.Bool, workload *kvs.Workload
 				batchGetsForHost[hostId].Requests = append(batchGetsForHost[hostId].Requests, request)
 			} else {
 				sendBatchGets(hostId)
-
-				start := time.Now()
 				clients[hostId].Put(key, value)
-				end := time.Now()
-
-				if logger != nil { // Check if logging is enabled
-					logger.Log(kvs.HistoryEntry{
-						ClientID:   id,
-						OpType:     "put",
-						Key:        key,
-						InputValue: value,
-						StartNanos: start.UnixNano(),
-						EndNanos:   end.UnixNano(),
-					})
-				}
 			}
 		}
 		for hostId := 0; hostId < len_hosts; hostId++ {
@@ -149,7 +115,7 @@ func main() {
 	flag.Var(&hosts, "hosts", "Comma-separated list of host:ports to connect to")
 	theta := flag.Float64("theta", 0.99, "Zipfian distribution skew parameter")
 	workload := flag.String("workload", "YCSB-B", "Workload type (YCSB-A, YCSB-B, YCSB-C)")
-	secs := flag.Int("secs", 5, "Duration in seconds for each client to run")
+	secs := flag.Int("secs", 30, "Duration in seconds for each client to run")
 	numClients := flag.Int("clients", 256, "Concurrent clients")
 	flag.Parse()
 
@@ -164,23 +130,6 @@ func main() {
 			"secs %d\n",
 		hosts, *theta, *workload, *secs,
 	)
-	var historyDir string
-	exePath, err := os.Executable()
-	if err != nil {
-		log.Printf("Warning: Could not determine executable path. Disabling history logging. Error: %v", err)
-	} else {
-		projectRoot := filepath.Dir(filepath.Dir(exePath))
-		historyDir = filepath.Join(projectRoot, "history_logs")
-
-		if err := os.MkdirAll(historyDir, 0755); err != nil {
-			log.Printf("Warning: Could not create history directory %s. Disabling logging. Error: %v", historyDir, err)
-			historyDir = "" // Disable logging on error
-		}
-	}
-
-	if historyDir != "" {
-		fmt.Printf("History logging is enabled. Logs will be saved in: %s\n", historyDir)
-	}
 
 	start := time.Now()
 
@@ -189,25 +138,8 @@ func main() {
 
 	for clientId := 0; clientId < *numClients; clientId++ {
 		go func(clientId int) {
-			var logger *kvs.HistoryLogger
-			if historyDir != "" {
-				// unique filename for each client instance to avoid conflicts.
-				hostname, _ := os.Hostname()
-				pid := os.Getpid()
-				logFileName := fmt.Sprintf("history-client%d-%s-pid%d.log", clientId, hostname, pid)
-				logFilePath := filepath.Join(historyDir, logFileName)
-
-				var err error
-				logger, err = kvs.NewHistoryLogger(logFilePath)
-				if err != nil {
-					log.Printf("client %d: could not create history log file: %v", clientId, err)
-				} else {
-					defer logger.Close()
-				}
-			}
-
 			workload := kvs.NewWorkload(*workload, *theta)
-			runClient(clientId, hosts, &done, workload, resultsCh, logger)
+			runClient(clientId, hosts, &done, workload, resultsCh)
 		}(clientId)
 	}
 
