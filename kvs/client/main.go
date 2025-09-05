@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/rpc"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -50,16 +51,12 @@ func (client *Client) Put(key string, value string) {
 	}
 }
 
-func runClient(id int, hosts []string, done *atomic.Bool, workload *kvs.Workload, resultsCh chan<- uint64) {
-	len_hosts := len(hosts)
-	clients := make([]*Client, len_hosts)
-	for i, addr := range hosts {
-		clients[i] = Dial(addr)
-	}
+func runClient(id int, clients []*Client, hosts []string, done *atomic.Bool, workload *kvs.Workload, resultsCh chan<- uint64, wg *sync.WaitGroup) {
+	defer wg.Done()
 
+	len_hosts := len(hosts)
 	value := strings.Repeat("x", 128)
 	const batchSize = 1024
-
 	opsCompleted := uint64(0)
 
 	// Batch get requests for each host. When we see a put, we process the
@@ -132,20 +129,32 @@ func main() {
 		hosts, *theta, *workload, *secs,
 	)
 
+	connectionSets := make([][]*Client, *numClients)
+	for i := 0; i < *numClients; i++ {
+		connectionSets[i] = make([]*Client, len(hosts))
+		for j, addr := range hosts {
+			connectionSets[i][j] = Dial(addr)
+		}
+	}
+
 	start := time.Now()
 
 	done := atomic.Bool{}
 	resultsCh := make(chan uint64, *numClients)
+	var wg sync.WaitGroup
 
 	for clientId := 0; clientId < *numClients; clientId++ {
+		wg.Add(1)
 		go func(clientId int) {
 			workload := kvs.NewWorkload(*workload, *theta)
-			runClient(clientId, hosts, &done, workload, resultsCh)
+			runClient(clientId, connectionSets[clientId], hosts, &done, workload, resultsCh, &wg)
 		}(clientId)
 	}
 
 	time.Sleep(time.Duration(*secs) * time.Second)
 	done.Store(true)
+	wg.Wait()
+	close(resultsCh)
 
 	opsCompleted := uint64(0)
 	for clientId := 0; clientId < *numClients; clientId++ {
