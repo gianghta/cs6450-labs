@@ -26,9 +26,9 @@ usage() {
 # Check for help options
 for arg in "$@"; do
     case "$arg" in
-        help|-h|--help|-help)
-            usage
-            ;;
+    help | -h | --help | -help)
+        usage
+        ;;
     esac
 done
 
@@ -98,20 +98,20 @@ TOTAL_NEEDED=$((SERVER_COUNT + CLIENT_COUNT))
 
 if [ "$TOTAL_NEEDED" -gt "$AVAILABLE_COUNT" ]; then
     echo "Error: Requested $TOTAL_NEEDED nodes (servers: $SERVER_COUNT, clients: $CLIENT_COUNT)"
-    echo "       but only $AVAILABLE_COUNT nodes are available (node0 to node$((AVAILABLE_COUNT-1)))"
+    echo "       but only $AVAILABLE_COUNT nodes are available (node0 to node$((AVAILABLE_COUNT - 1)))"
     exit 1
 fi
 
-echo "Using $TOTAL_NEEDED of $AVAILABLE_COUNT available nodes (node0 to node$((AVAILABLE_COUNT-1)))"
+echo "Using $TOTAL_NEEDED of $AVAILABLE_COUNT available nodes (node0 to node$((AVAILABLE_COUNT - 1)))"
 
 # Build server and client node arrays dynamically using sequential node names
 SERVER_NODES=()
-for ((i=0; i<SERVER_COUNT; i++)); do
+for ((i = 0; i < SERVER_COUNT; i++)); do
     SERVER_NODES+=("node$i")
 done
 
 CLIENT_NODES=()
-for ((i=SERVER_COUNT; i<SERVER_COUNT+CLIENT_COUNT; i++)); do
+for ((i = SERVER_COUNT; i < SERVER_COUNT + CLIENT_COUNT; i++)); do
     CLIENT_NODES+=("node$i")
 done
 
@@ -154,10 +154,12 @@ echo "Building the project..."
 make
 echo
 
+GOGC_VAL=${GOGC_TUNING:-100}
+
 # Start servers
 for node in "${SERVER_NODES[@]}"; do
     echo "Starting server on $node..."
-    ${SSH} $node "${ROOT}/bin/kvsserver $SERVER_ARGS > \"$LOG_DIR/kvsserver-$node.log\" 2>&1 &"
+    ${SSH} $node "GOGC=${GOGC_VAL} ${ROOT}/bin/kvsserver $SERVER_ARGS > \"$LOG_DIR/kvsserver-$node.log\" 2>&1 &"
 done
 
 # Give servers time to start

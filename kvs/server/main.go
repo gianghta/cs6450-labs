@@ -61,10 +61,21 @@ func (kv *KVService) Put(request *kvs.PutRequest, response *kvs.PutResponse) err
 }
 
 func (kv *KVService) BatchGet(request *kvs.BatchGetRequest, response *kvs.BatchGetResponse) error {
-	response.Responses = make([]kvs.GetResponse, len(request.Requests))
-	for i, request := range request.Requests {
-		if err := kv.Get(&request, &response.Responses[i]); err != nil {
-			return err
+	numGets := len(request.Requests)
+	if numGets == 0 {
+		return nil
+	}
+
+	// 1. Lock the stats mutex only ONCE.
+	kv.stats.Lock()
+	kv.stats.gets += uint64(numGets)
+	kv.stats.Unlock()
+
+	// 2. Perform all reads without calling the single Get method.
+	response.Responses = make([]kvs.GetResponse, numGets)
+	for i, req := range request.Requests {
+		if value, ok := kv.mp.Load(req.Key); ok {
+			response.Responses[i].Value = value.(string)
 		}
 	}
 	return nil
