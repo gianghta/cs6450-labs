@@ -68,7 +68,7 @@ func runClient(id int, clients []*Client, hosts []string, done *atomic.Bool, wor
 		if err := clients[hostId].rpcClient.Call("KVService.BatchGet", &request, &response); err != nil {
 			log.Fatal(err)
 		}
-		opsCompleted += uint64(len(response.Responses))
+		atomic.AddUint64(&opsCompleted, uint64(len(response.Responses)))
 		batchGetsForHost[hostId].Requests = batchGetsForHost[hostId].Requests[:0]
 	}
 
@@ -83,17 +83,24 @@ func runClient(id int, clients []*Client, hosts []string, done *atomic.Bool, wor
 			} else {
 				sendBatchGets(hostId)
 				clients[hostId].Put(key, value)
-				opsCompleted++
+				atomic.AddUint64(&opsCompleted, 1)
 			}
 		}
+
+		var batchWg sync.WaitGroup
 		for hostId := 0; hostId < len_hosts; hostId++ {
-			sendBatchGets(hostId)
+			batchWg.Add(1)
+			go func(hId int) {
+				defer batchWg.Done()
+				sendBatchGets(hId)
+			}(hostId)
 		}
+		batchWg.Wait()
 	}
 
 	fmt.Printf("Client %d finished operations.\n", id)
 
-	resultsCh <- opsCompleted
+	resultsCh <- atomic.LoadUint64(&opsCompleted)
 }
 
 type HostList []string
