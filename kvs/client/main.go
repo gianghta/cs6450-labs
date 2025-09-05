@@ -51,12 +51,11 @@ func (client *Client) Put(key string, value string) {
 	}
 }
 
-func runClient(id int, clients []*Client, hosts []string, done *atomic.Bool, workload *kvs.Workload, resultsCh chan<- uint64, wg *sync.WaitGroup) {
+func runClient(id int, clients []*Client, batchSize int, hosts []string, done *atomic.Bool, workload *kvs.Workload, resultsCh chan<- uint64, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	len_hosts := len(hosts)
 	value := strings.Repeat("x", 128)
-	const batchSize = 10000
 	opsCompleted := uint64(0)
 
 	// Batch get requests for each host. When we see a put, we process the
@@ -121,7 +120,8 @@ func main() {
 	theta := flag.Float64("theta", 0.99, "Zipfian distribution skew parameter")
 	workload := flag.String("workload", "YCSB-B", "Workload type (YCSB-A, YCSB-B, YCSB-C)")
 	secs := flag.Int("secs", 30, "Duration in seconds for each client to run")
-	numClients := flag.Int("clients", 1040, "Concurrent clients")
+	numClients := flag.Int("clients", 256, "Concurrent clients")       // Best number is around 1024 - 1100
+	batchSize := flag.Int("batchSize", 1024, "Get request batch size") // for max throughput currently is 10000
 	flag.Parse()
 
 	if len(hosts) == 0 {
@@ -154,7 +154,7 @@ func main() {
 		wg.Add(1)
 		go func(clientId int) {
 			workload := kvs.NewWorkload(*workload, *theta)
-			runClient(clientId, connectionSets[clientId], hosts, &done, workload, resultsCh, &wg)
+			runClient(clientId, connectionSets[clientId], *batchSize, hosts, &done, workload, resultsCh, &wg)
 		}(clientId)
 	}
 
