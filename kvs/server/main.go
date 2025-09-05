@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"math/rand/v2"
 	"net"
 	"net/http"
 	"net/rpc"
@@ -14,9 +15,11 @@ import (
 	"github.com/rstutsman/cs6450-labs/kvs"
 )
 
+const numCounterShards = 256
+
 type Stats struct {
-	puts atomic.Uint64
-	gets atomic.Uint64
+	puts []atomic.Uint64
+	gets []atomic.Uint64
 }
 
 type PrevStats struct {
@@ -33,12 +36,15 @@ type KVService struct {
 
 func NewKVService() *KVService {
 	kvs := &KVService{}
+	kvs.stats.puts = make([]atomic.Uint64, numCounterShards)
+	kvs.stats.gets = make([]atomic.Uint64, numCounterShards)
 	kvs.lastPrint = time.Now()
 	return kvs
 }
 
 func (kv *KVService) Get(request *kvs.GetRequest, response *kvs.GetResponse) error {
-	kv.stats.gets.Add(1)
+	shardIndex := rand.Uint32N(numCounterShards)
+	kv.stats.gets[shardIndex].Add(1)
 
 	value, ok := kv.mp.Load(request.Key)
 	if ok {
@@ -48,7 +54,8 @@ func (kv *KVService) Get(request *kvs.GetRequest, response *kvs.GetResponse) err
 }
 
 func (kv *KVService) Put(request *kvs.PutRequest, response *kvs.PutResponse) error {
-	kv.stats.puts.Add(1)
+	shardIndex := rand.Uint32N(numCounterShards)
+	kv.stats.puts[shardIndex].Add(1)
 	kv.mp.Store(request.Key, request.Value)
 
 	return nil
@@ -64,13 +71,21 @@ func (kv *KVService) BatchGet(request *kvs.BatchGetRequest, response *kvs.BatchG
 		}
 	}
 
-	kv.stats.gets.Add(uint64(numGets))
+	if numGets > 0 {
+		shardIndex := rand.Uint32N(numCounterShards)
+		kv.stats.gets[shardIndex].Add(uint64(numGets))
+	}
+
 	return nil
 }
 
 func (kv *KVService) printStats() {
-	currentGets := kv.stats.gets.Load()
-	currentPuts := kv.stats.puts.Load()
+	var currentPuts uint64
+	var currentGets uint64
+	for i := 0; i < numCounterShards; i++ {
+		currentGets += kv.stats.gets[i].Load()
+		currentPuts += kv.stats.puts[i].Load()
+	}
 
 	now := time.Now()
 	deltaS := now.Sub(kv.lastPrint).Seconds()
