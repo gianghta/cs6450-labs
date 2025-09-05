@@ -8,13 +8,13 @@ import (
 	"net/http"
 	"net/rpc"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/rstutsman/cs6450-labs/kvs"
 )
 
 type Stats struct {
-	sync.Mutex
 	puts uint64
 	gets uint64
 }
@@ -40,9 +40,7 @@ func NewKVService() *KVService {
 }
 
 func (kv *KVService) Get(request *kvs.GetRequest, response *kvs.GetResponse) error {
-	kv.stats.Lock()
-	kv.stats.gets++
-	kv.stats.Unlock()
+	atomic.AddUint64(&kv.stats.gets, 1)
 
 	value, ok := kv.mp.Load(request.Key)
 	if ok {
@@ -52,9 +50,7 @@ func (kv *KVService) Get(request *kvs.GetRequest, response *kvs.GetResponse) err
 }
 
 func (kv *KVService) Put(request *kvs.PutRequest, response *kvs.PutResponse) error {
-	kv.stats.Lock()
-	kv.stats.puts++
-	kv.stats.Unlock()
+	atomic.AddUint64(&kv.stats.puts, 1)
 	kv.mp.Store(request.Key, request.Value)
 
 	return nil
@@ -66,12 +62,8 @@ func (kv *KVService) BatchGet(request *kvs.BatchGetRequest, response *kvs.BatchG
 		return nil
 	}
 
-	// 1. Lock the stats mutex only ONCE.
-	kv.stats.Lock()
-	kv.stats.gets += uint64(numGets)
-	kv.stats.Unlock()
+	atomic.AddUint64(&kv.stats.gets, uint64(numGets))
 
-	// 2. Perform all reads without calling the single Get method.
 	response.Responses = make([]kvs.GetResponse, numGets)
 	for i, req := range request.Requests {
 		if value, ok := kv.mp.Load(req.Key); ok {
@@ -82,14 +74,15 @@ func (kv *KVService) BatchGet(request *kvs.BatchGetRequest, response *kvs.BatchG
 }
 
 func (kv *KVService) printStats() {
-	kv.stats.Lock()
-	stats := kv.stats
+	currentGets := atomic.LoadUint64(&kv.stats.gets)
+	currentPuts := atomic.LoadUint64(&kv.stats.puts)
+
+	stats := Stats{puts: currentPuts, gets: currentGets}
 	prevStats := kv.prevStats
 	kv.prevStats = stats
 	now := time.Now()
 	lastPrint := kv.lastPrint
 	kv.lastPrint = now
-	kv.stats.Unlock()
 
 	diff := stats.Sub(&prevStats)
 	deltaS := now.Sub(lastPrint).Seconds()
