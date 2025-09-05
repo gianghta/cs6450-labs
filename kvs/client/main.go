@@ -51,7 +51,7 @@ func (client *Client) Put(key string, value string) {
 	}
 }
 
-func runClient(id int, hosts []string, done *atomic.Bool, workload *kvs.Workload, resultsCh chan<- uint64) {
+func runClient(id int, batchSize int, hosts []string, done *atomic.Bool, workload *kvs.Workload, resultsCh chan<- uint64) {
 	len_hosts := len(hosts)
 	clients := make([]*Client, len_hosts)
 	for i, addr := range hosts {
@@ -59,8 +59,6 @@ func runClient(id int, hosts []string, done *atomic.Bool, workload *kvs.Workload
 	}
 
 	value := strings.Repeat("x", 128)
-	const batchSize = 1024
-
 	opsCompleted := uint64(0)
 
 	// Batch get requests for each host. When we see a put, we process the
@@ -126,6 +124,7 @@ func main() {
 	workload := flag.String("workload", "YCSB-B", "Workload type (YCSB-A, YCSB-B, YCSB-C)")
 	secs := flag.Int("secs", 30, "Duration in seconds for each client to run")
 	numClients := flag.Int("clients", 256, "Concurrent clients")
+	batchSize := flag.Int("batchSize", 1024, "Get request batch size")
 	flag.Parse()
 
 	if len(hosts) == 0 {
@@ -148,7 +147,7 @@ func main() {
 	for clientId := 0; clientId < *numClients; clientId++ {
 		go func(clientId int) {
 			workload := kvs.NewWorkload(*workload, *theta)
-			runClient(clientId, hosts, &done, workload, resultsCh)
+			runClient(clientId, *batchSize, hosts, &done, workload, resultsCh)
 		}(clientId)
 	}
 
