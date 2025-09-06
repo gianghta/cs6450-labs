@@ -41,10 +41,11 @@ def analyze_scalability(filename='../scalability_results.txt'):
     
     # Plot 1: Log scale throughput vs clients
     ax1.plot(log_clients, throughputs, 'b-o', linewidth=2, markersize=8)
-    ax1.set_xlabel('Log₂(Total Number of Clients)', fontsize=12)
+    ax1.set_xlabel('Total Number of Clients (Log₂ scale)', fontsize=12)
     ax1.set_ylabel('Total Throughput (op/s)', fontsize=12)
     ax1.set_title('System Scalability: Throughput vs Client Count (Log Scale)', fontsize=14)
     ax1.grid(True, alpha=0.3)
+    ax1.ticklabel_format(style='plain', axis='y')  # Disable scientific notation on y-axis
     
     # Add value labels on points
     for i, (x, y) in enumerate(zip(log_clients, throughputs)):
@@ -61,7 +62,7 @@ def analyze_scalability(filename='../scalability_results.txt'):
     # Plot 2: Efficiency analysis (throughput per client)
     throughput_per_client = [t/tc for t, tc in zip(throughputs, total_clients)]
     ax2.plot(log_clients, throughput_per_client, 'r-s', linewidth=2, markersize=8)
-    ax2.set_xlabel('Log₂(Total Number of Clients)', fontsize=12)
+    ax2.set_xlabel('Total Number of Clients (Log₂ scale)', fontsize=12)
     ax2.set_ylabel('Throughput per Client (op/s)', fontsize=12)
     ax2.set_title('Efficiency: Throughput per Client', fontsize=14)
     ax2.grid(True, alpha=0.3)
