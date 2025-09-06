@@ -8,7 +8,7 @@ NODES["client1"]="node2"
 NODES["client2"]="node3"
 
 DURATION=${1:-30}  # Monitor duration
-REMOTE_DIR="/mnt/nfs/sicheng/new/cs6450-labs/monitor"
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 echo "Start monitoring in every node..."
 echo "Monitoring duration: $DURATION seconds"
@@ -17,8 +17,8 @@ echo "Monitoring duration: $DURATION seconds"
 for node_name in "${!NODES[@]}"; do
     node_addr=${NODES[$node_name]}
     echo "Start node monitor: $node_name"
-    
-    ssh "$node_addr" "cd $REMOTE_DIR && nohup ./monitor_node.sh $node_name $DURATION > monitor.log 2>&1 &" &
+
+    ssh "$node_addr" "cd $SCRIPT_DIR && nohup ./monitor_node.sh $node_name $DURATION > monitor.log 2>&1 &" &
 done
 
 echo "Everyone started"
