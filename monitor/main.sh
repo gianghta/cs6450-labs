@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DURATION=${1:-120}
+DURATION=${1:-30}
 
 # Check tools
 if ! command -v sar &> /dev/null; then

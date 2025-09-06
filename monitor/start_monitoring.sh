@@ -7,7 +7,7 @@ NODES["server2"]="node1"
 NODES["client1"]="node2"
 NODES["client2"]="node3"
 
-DURATION=${1:-120}  # Monitor duration
+DURATION=${1:-30}  # Monitor duration
 REMOTE_DIR="/mnt/nfs/sicheng/new/cs6450-labs/monitor"
 
 echo "Start monitoring in every node..."
