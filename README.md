@@ -4,9 +4,9 @@
 
 ## 1 Results
 
-### 1.1 Final Throughput Number
+### With 4 nodes cluster
 
-TODO: wait till we have 8 nodes?
+#### Final Throughput
 
 Server nodes: node0 node1
 Client nodes: node2 node3
@@ -16,9 +16,7 @@ node1 median 1610980 op/s
 
 total 3372813 op/s
 
-### 1.2 Hardware Utilization
-
-TODO: Update this table if we update the code.
+#### Hardware Utilization
 
 | Node | CPU Median (%) | Memory Median (%) | Network Median (%) |
 |------|--------------|-----------------|------------------|
@@ -27,9 +25,37 @@ TODO: Update this table if we update the code.
 | Server 1 | 88.49% | 2.45% | 17.60% |
 | Server 2 | 80.01% | 1.15% | 15.76% |
 
-### 1.3 Scaling Characteristics
+#### Scaling with increasing concurrent clients
 
 ![](scale/scalability_analysis.png)
+
+
+### With 8 nodes cluster
+
+#### Final Throughput
+
+Server nodes: node0 node1 node2 node3
+Client nodes: node4 node5 node6 node7
+
+node0 median 1903520 op/s
+node1 median 1653337 op/s
+node2 median 1591488 op/s
+node3 median 1513968 op/s
+
+total 6662312 op/s
+
+#### Hardware Utilization
+
+| Node | CPU Median (%) | Memory Median (%) | Network Median (%) |
+|------|--------------|-----------------|------------------|
+| Client 1 | 83.99% | 0.96% | 17.95% |
+| Client 2 | 84.49% | 0.94% | 17.33% |
+| client 3 | 84.66% | 0.95% | 17.38% |
+| client 4 | 84.35% | 0.95% | 17.61% |
+| Server 1 | 87.29% | 2.45% | 20.31% |
+| Server 2 | 81.34% | 1.14% | 17.50% |
+| server 3 | 79.58% | 1.16% | 16.75% |
+| server 4 | 79.76% | 1.15% | 15.91% |
 
 
 ## 2 Design
