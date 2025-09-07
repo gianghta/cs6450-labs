@@ -1,0 +1,6 @@
+commit_hash,commit_message,throughput_ops_per_sec,node0_ops,node1_ops,node2_ops,node3_ops,timestamp
+be3153b,"format throughput outputs",6710478,1898804,1679002,1601632,1531040,Sun Sep  7 12:00:56 AM MDT 2025
+b27f0a2,"add 8 nodes cluster results",6618322,1880795,1641978,1588101,1507447,Sun Sep  7 12:01:49 AM MDT 2025
+e592b5e,"remove monitor data and logs",6600250,1877336,1650935,1572562,1499417,Sun Sep  7 12:02:43 AM MDT 2025
+9ef3acc,"allow monitoring from any directory",ERROR,ERROR,ERROR,ERROR,ERROR,Sun Sep  7 12:02:43 AM MDT 2025
+0804360,"change default monitoring duration to 30",ERROR,ERROR,ERROR,ERROR,ERROR,Sun Sep  7 12:02:43 AM MDT 2025

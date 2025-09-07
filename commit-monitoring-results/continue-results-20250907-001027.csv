@@ -1,0 +1,19 @@
+commit_hash,commit_message,throughput_ops_per_sec,node0_ops,node1_ops,node2_ops,node3_ops,timestamp
+541e52f,"scale request generation using concurrent client goroutines",1341557,383857,334077,319104,304518,Sun Sep  7 12:11:27 AM MDT 2025
+30f3fe0,"replace map with sync.Map and move mutex only for stats",1314102,374833,326253,313067,299949,Sun Sep  7 12:12:22 AM MDT 2025
+050a8dd,"batch get requests on client side",6057373,1729334,1508143,1450301,1369596,Sun Sep  7 12:13:19 AM MDT 2025
+b0b45c7,"Add monitoring scripts",6045621,1722358,1491427,1452688,1379147,Sun Sep  7 12:14:11 AM MDT 2025
+cc885c9,"Add README file",6043344,1719351,1504427,1446212,1373354,Sun Sep  7 12:15:08 AM MDT 2025
+c52956b,"Add data analyze script",6115291,1729444,1523981,1466198,1395668,Sun Sep  7 12:16:03 AM MDT 2025
+dfafc83,"Add scale analysis",6053945,1722473,1506652,1436326,1388494,Sun Sep  7 12:17:00 AM MDT 2025
+e09609f,"fix: opsCompleted should also count put requests",6063356,1720639,1505534,1445508,1391676,Sun Sep  7 12:17:52 AM MDT 2025
+6813d9f,"lock stats mutex only once in batchGet",6698342,1917975,1662196,1592819,1525351,Sun Sep  7 12:18:50 AM MDT 2025
+ef5c52d,"Change mutex to atomic counter",6703886,1911971,1659905,1599310,1532701,Sun Sep  7 12:19:45 AM MDT 2025
+c4d8c2d,"Remove sequential send with parallel goroutine",6666995,1900976,1650005,1603114,1512900,Sun Sep  7 12:20:42 AM MDT 2025
+262c5f9,"Tweak knob for batchsize and concurrent clients",6631375,1886344,1653382,1579175,1512474,Sun Sep  7 12:21:35 AM MDT 2025
+0021baa,"Merge remote-tracking branch 'origin/sicheng' into nrkhadem",6635952,1889491,1626017,1587247,1533197,Sun Sep  7 12:22:33 AM MDT 2025
+0804360,"change default monitoring duration to 30",6679977,1896338,1664520,1596405,1522715,Sun Sep  7 12:23:28 AM MDT 2025
+9ef3acc,"allow monitoring from any directory",ERROR,ERROR,ERROR,ERROR,ERROR,Sun Sep  7 12:23:28 AM MDT 2025
+e592b5e,"remove monitor data and logs",6680351,1902854,1670037,1586011,1521450,Sun Sep  7 12:24:22 AM MDT 2025
+b27f0a2,"add 8 nodes cluster results",6715711,1905632,1666962,1607720,1535396,Sun Sep  7 12:25:15 AM MDT 2025
+be3153b,"format throughput outputs",6644080,1875398,1656686,1582712,1529284,Sun Sep  7 12:26:12 AM MDT 2025
