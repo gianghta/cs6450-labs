@@ -62,14 +62,29 @@ func (kv *KVService) BatchGet(request *kvs.BatchGetRequest, response *kvs.BatchG
 		return nil
 	}
 
-	atomic.AddUint64(&kv.stats.gets, uint64(numGets))
-
 	response.Responses = make([]kvs.GetResponse, numGets)
 	for i, req := range request.Requests {
 		if value, ok := kv.mp.Load(req.Key); ok {
 			response.Responses[i].Value = value.(string)
 		}
 	}
+
+	atomic.AddUint64(&kv.stats.gets, uint64(numGets))
+	return nil
+}
+
+func (kv *KVService) BatchPut(request *kvs.BatchPutRequest, response *kvs.BatchPutResponse) error {
+	numPuts := len(request.Requests)
+	if numPuts == 0 {
+		return nil
+	}
+
+	for _, req := range request.Requests {
+		kv.mp.Store(req.Key, req.Value)
+	}
+
+	// Update stats once for the entire batch.
+	atomic.AddUint64(&kv.stats.puts, uint64(numPuts))
 	return nil
 }
 
