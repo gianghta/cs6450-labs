@@ -62,8 +62,7 @@ func runClient(id int, batchSize int, hosts []string, done *atomic.Bool, workloa
 	var opsCompleted uint64
 
 	for !done.Load() {
-		batchGetsForHost := make(map[int][]kvs.GetRequest, len_hosts)
-		batchPutsForHost := make(map[int][]kvs.PutRequest, len_hosts)
+		opsForHost := make(map[int][]kvs.Operation, len_hosts)
 
 		for j := 0; j < batchSize; j++ {
 			op := workload.Next()
@@ -71,52 +70,41 @@ func runClient(id int, batchSize int, hosts []string, done *atomic.Bool, workloa
 			hostId := int(op.Key % uint64(len_hosts))
 
 			if op.IsRead {
-				req := kvs.GetRequest{Key: key}
-				batchGetsForHost[hostId] = append(batchGetsForHost[hostId], req)
+				opsForHost[hostId] = append(opsForHost[hostId], kvs.Operation{
+					OpType: "GET",
+					Key:    key,
+				})
 			} else {
-				req := kvs.PutRequest{Key: key, Value: value}
-				batchPutsForHost[hostId] = append(batchPutsForHost[hostId], req)
+				opsForHost[hostId] = append(opsForHost[hostId], kvs.Operation{
+					OpType: "PUT",
+					Key:    key,
+					Value:  value,
+				})
 			}
 		}
 
 		var batchWg sync.WaitGroup
-
-		for hostId, requests := range batchGetsForHost {
-			if len(requests) > 0 {
-				batchWg.Add(1)
-				go func(hId int, reqs []kvs.GetRequest) {
-					defer batchWg.Done()
-					request := kvs.BatchGetRequest{Requests: reqs}
-					response := kvs.BatchGetResponse{}
-					err := clients[hId].rpcClient.Call("KVService.BatchGet", &request, &response)
-					if err != nil {
-						log.Fatal(err)
-					}
-					atomic.AddUint64(&opsCompleted, uint64(len(reqs)))
-				}(hostId, requests)
+		for hostId, operations := range opsForHost {
+			if len(operations) == 0 {
+				continue
 			}
-		}
+			batchWg.Add(1)
 
-		for hostId, requests := range batchPutsForHost {
-			if len(requests) > 0 {
-				batchWg.Add(1)
-				go func(hId int, reqs []kvs.PutRequest) {
-					defer batchWg.Done()
-					request := kvs.BatchPutRequest{Requests: reqs}
-					response := kvs.BatchPutResponse{}
-					err := clients[hId].rpcClient.Call("KVService.BatchPut", &request, &response)
-					if err != nil {
-						log.Fatal(err)
-					}
-					atomic.AddUint64(&opsCompleted, uint64(len(reqs)))
-				}(hostId, requests)
-			}
-		}
+			go func(hId int, ops []kvs.Operation) {
+				defer batchWg.Done()
 
+				request := kvs.BatchOpRequest{Operations: ops}
+				response := kvs.BatchOpResponse{}
+				err := clients[hId].rpcClient.Call("KVService.BatchOp", &request, &response)
+				if err != nil {
+					log.Fatal(err)
+				}
+				atomic.AddUint64(&opsCompleted, uint64(len(ops)))
+			}(hostId, operations)
+		}
 		batchWg.Wait()
 	}
 
-	fmt.Printf("Client %d finished operations.\n", id)
 	resultsCh <- atomic.LoadUint64(&opsCompleted)
 }
 

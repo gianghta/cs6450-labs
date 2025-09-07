@@ -8,21 +8,22 @@ type GetResponse struct {
 	Value string
 }
 
-type BatchGetRequest struct {
-	Requests []GetRequest
-}
-
-type BatchGetResponse struct {
-	Responses []GetResponse
-}
-
 type PutRequest struct {
-    Key   string
-    Value string
+	Key   string
+	Value string
 }
 type PutResponse struct{}
 
-type BatchPutRequest struct {
-    Requests []PutRequest
+type Operation struct {
+	OpType string // "GET" or "PUT"
+	Key    string
+	Value  string
 }
-type BatchPutResponse struct{}
+
+type BatchOpRequest struct {
+	Operations []Operation
+}
+
+type BatchOpResponse struct {
+	Results []string
+}

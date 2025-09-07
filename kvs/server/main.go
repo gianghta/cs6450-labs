@@ -56,35 +56,33 @@ func (kv *KVService) Put(request *kvs.PutRequest, response *kvs.PutResponse) err
 	return nil
 }
 
-func (kv *KVService) BatchGet(request *kvs.BatchGetRequest, response *kvs.BatchGetResponse) error {
-	numGets := len(request.Requests)
-	if numGets == 0 {
+func (kv *KVService) BatchOp(request *kvs.BatchOpRequest, response *kvs.BatchOpResponse) error {
+	numOps := len(request.Operations)
+	if numOps == 0 {
 		return nil
 	}
 
-	response.Responses = make([]kvs.GetResponse, numGets)
-	for i, req := range request.Requests {
-		if value, ok := kv.mp.Load(req.Key); ok {
-			response.Responses[i].Value = value.(string)
+	response.Results = make([]string, numOps)
+	var gets, puts uint64
+
+	for i, op := range request.Operations {
+		if op.OpType == "GET" {
+			gets++
+			if value, ok := kv.mp.Load(op.Key); ok {
+				response.Results[i] = value.(string)
+			}
+		} else if op.OpType == "PUT" {
+			puts++
+			kv.mp.Store(op.Key, op.Value)
 		}
 	}
 
-	atomic.AddUint64(&kv.stats.gets, uint64(numGets))
-	return nil
-}
-
-func (kv *KVService) BatchPut(request *kvs.BatchPutRequest, response *kvs.BatchPutResponse) error {
-	numPuts := len(request.Requests)
-	if numPuts == 0 {
-		return nil
+	if gets > 0 {
+		atomic.AddUint64(&kv.stats.gets, gets)
 	}
-
-	for _, req := range request.Requests {
-		kv.mp.Store(req.Key, req.Value)
+	if puts > 0 {
+		atomic.AddUint64(&kv.stats.puts, puts)
 	}
-
-	// Update stats once for the entire batch.
-	atomic.AddUint64(&kv.stats.puts, uint64(numPuts))
 	return nil
 }
 
